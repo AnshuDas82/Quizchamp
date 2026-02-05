@@ -2,7 +2,7 @@ import express from "express";
 import mongoose from "mongoose";
 import cors from "cors";
 import bcrypt from "bcryptjs";
-import Result from "./models/result.js";
+import Result from "./models/Result.js";
 import Question from "./models/question.js";
 import Exam from "./models/Exam.js";
 
@@ -12,7 +12,9 @@ app.use(cors());
 
 /*Database*/
 mongoose
-  .connect("mongodb://127.0.0.1:27017/quizchampdb")
+  .connect(
+    "mongodb+srv://kranshu983_db_user:YhMqvZ2XcgF5OqJO@cluster0.qcjaijg.mongodb.net/",
+  )
   .then(() => console.log("MongoDB connected"))
   .catch((err) => console.error("MongoDB error:", err));
 
@@ -121,7 +123,11 @@ app.get("/join-exam/:code", async (req, res) => {
     const examCode = req.params.code.trim();
     const studentEmail = req.query.email?.trim().toLowerCase();
 
-    console.log('consoling the exam code and studentEmail',examCode,studentEmail)
+    console.log(
+      "consoling the exam code and studentEmail",
+      examCode,
+      studentEmail,
+    );
 
     if (!studentEmail) {
       return res.status(400).json({ error: "Student email required" });
@@ -134,7 +140,7 @@ app.get("/join-exam/:code", async (req, res) => {
 
     // console.log('exam finding',exam)
 
-    if (!exam) { 
+    if (!exam) {
       return res.status(404).json({ error: "Invalid or expired exam code" });
     }
 
@@ -143,7 +149,7 @@ app.get("/join-exam/:code", async (req, res) => {
       studentEmail,
     });
 
-    console.log('consoling the attempted',attempted)
+    console.log("consoling the attempted", attempted);
 
     if (attempted) {
       return res.status(403).json({
