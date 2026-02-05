@@ -24,7 +24,7 @@ function TeacherDashboard() {
   const fetchPreviousExams = async () => {
     try {
       const res = await axios.get(
-        `http://localhost:5000/teacher-exams/${teacherEmail}`
+        `https://quizchamp-backend.onrender.com/teacher-exams/${teacherEmail}`
       );
       setPreviousExams(res.data.exams || []);
     } catch (err) {
@@ -53,7 +53,7 @@ function TeacherDashboard() {
 
     try {
       const res = await axios.post(
-        "http://localhost:5000/questions",
+        "https://quizchamp-backend.onrender.com/questions",
         payload
       );
 
@@ -86,7 +86,7 @@ function TeacherDashboard() {
         createdBy: teacherEmail,
       };
 
-      await axios.post("http://localhost:5000/start-exam", payload);
+      await axios.post("https://quizchamp-backend.onrender.com/start-exam", payload);
 
       alert("Exam started successfully!");
       setExamTitle("");
@@ -100,7 +100,7 @@ function TeacherDashboard() {
 
   const endExam = async () => {
     try {
-      await axios.post("http://localhost:5000/end-exam", {
+      await axios.post("https://quizchamp-backend.onrender.com/end-exam", {
         examId: selectedExam._id,
       });
 

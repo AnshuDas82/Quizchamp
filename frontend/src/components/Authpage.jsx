@@ -22,7 +22,7 @@ function AuthPage() {
 
     try {
       if (isLogin) {
-        const res = await axios.post("http://localhost:5000/login", {
+        const res = await axios.post("https://quizchamp-backend.onrender.com/login", {
           role,
           email: formData.email,
           password: formData.password,
@@ -34,7 +34,7 @@ function AuthPage() {
         if (role === "student") navigate("/student-dashboard");
         else navigate("/teacher-dashboard");
       } else {
-        const res = await axios.post("http://localhost:5000/signup", {
+        const res = await axios.post("https://quizchamp-backend.onrender.com/signup", {
           role,
           name: formData.name,
           email: formData.email,

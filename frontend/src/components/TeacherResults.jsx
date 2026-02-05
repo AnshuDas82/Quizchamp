@@ -10,7 +10,7 @@ function TeacherResults({ examId }) {
   const fetchResults = () => {
     if (!examId) return;
     axios
-      .get(`http://localhost:5000/results/${examId}`)
+      .get(`https://quizchamp-backend.onrender.com/results/${examId}`)
       .then((res) => setResults(res.data.results))
       .catch(() => console.error("Failed to fetch results"));
   };
@@ -25,7 +25,7 @@ function TeacherResults({ examId }) {
     try {
       setSelectedResultId(resultId);
       const res = await axios.get(
-        `http://localhost:5000/result/${resultId}`
+        `https://quizchamp-backend.onrender.com/result/${resultId}`
       );
       setSubmission(res.data.result);
       setLongMarks(res.data.result?.longAnswerMarks ?? "");
@@ -39,7 +39,7 @@ function TeacherResults({ examId }) {
       if (!selectedResultId) return;
 
       const res = await axios.post(
-        "http://localhost:5000/grade-result",
+        "https://quizchamp-backend.onrender.com/grade-result",
         {
           resultId: selectedResultId,
           longMarks: Number(longMarks || 0),

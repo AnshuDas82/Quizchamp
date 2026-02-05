@@ -16,7 +16,7 @@ function StudentDashboard() {
   const fetchMyResults = async () => {
     try {
       const res = await axios.get(
-        `http://localhost:5000/student-results/${studentEmail}`,
+        `https://quizchamp-backend.onrender.com/student-results/${studentEmail}`,
       );
       setMyResults(res.data.results || []);
     } catch (err) {
@@ -32,7 +32,7 @@ function StudentDashboard() {
   const joinExam = async () => {
     try {
       const res = await axios.get(
-        `http://localhost:5000/join-exam/${examCode}?email=${studentEmail}`,
+        `https://quizchamp-backend.onrender.com/join-exam/${examCode}?email=${studentEmail}`,
       );
 
       setExamData(res.data.exam);
@@ -70,7 +70,7 @@ function StudentDashboard() {
     if (started === false) return;
 
     try {
-      const res = await axios.post("http://localhost:5000/submit-exam", {
+      const res = await axios.post("https://quizchamp-backend.onrender.com/submit-exam", {
         examId: examData._id,
         studentEmail,
         answers,
