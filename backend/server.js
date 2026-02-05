@@ -2,7 +2,7 @@ import express from "express";
 import mongoose from "mongoose";
 import cors from "cors";
 import bcrypt from "bcryptjs";
-import result from "./models/result.js";
+import Result from "./models/result.js";
 import Question from "./models/question.js";
 import Exam from "./models/Exam.js";
 
@@ -121,6 +121,8 @@ app.get("/join-exam/:code", async (req, res) => {
     const examCode = req.params.code.trim();
     const studentEmail = req.query.email?.trim().toLowerCase();
 
+    console.log('consoling the exam code and studentEmail',examCode,studentEmail)
+
     if (!studentEmail) {
       return res.status(400).json({ error: "Student email required" });
     }
@@ -130,6 +132,8 @@ app.get("/join-exam/:code", async (req, res) => {
       status: "started",
     }).populate("questions");
 
+    // console.log('exam finding',exam)
+
     if (!exam) { 
       return res.status(404).json({ error: "Invalid or expired exam code" });
     }
@@ -138,6 +142,8 @@ app.get("/join-exam/:code", async (req, res) => {
       examId: exam._id,
       studentEmail,
     });
+
+    console.log('consoling the attempted',attempted)
 
     if (attempted) {
       return res.status(403).json({
