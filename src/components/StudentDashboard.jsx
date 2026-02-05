@@ -2,200 +2,246 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 
 function StudentDashboard() {
+  const studentEmail = localStorage.getItem("email")?.trim().toLowerCase();
+
   const [examCode, setExamCode] = useState("");
   const [examData, setExamData] = useState(null);
   const [error, setError] = useState("");
   const [started, setStarted] = useState(false);
-
   const [answers, setAnswers] = useState({});
   const [timeLeft, setTimeLeft] = useState(0);
+  const [myResults, setMyResults] = useState([]);
 
-  const joinExam = async () => {
-    if (examCode.length !== 6) {
-      setError("Please enter a valid 6-digit exam code");
-      return;
-    }
-
+  /*fetching of results*/
+  const fetchMyResults = async () => {
     try {
       const res = await axios.get(
-        `http://localhost:5000/join-exam/${examCode}`
+        `http://localhost:5000/student-results/${studentEmail}`,
       );
-
-      setExamData(res.data.exam);
-      setTimeLeft(res.data.exam.timeLimit * 60); // minutes → seconds
-      setError("");
+      setMyResults(res.data.results || []);
     } catch (err) {
-      setExamData(null);
-      setError("Invalid or expired exam code");
+      console.error("Failed to fetch results");
     }
   };
 
-  // ⏱ TIMER
   useEffect(() => {
-    if (!started || timeLeft <= 0) return;
+    if (studentEmail) fetchMyResults();
+  }, []);
+
+  /*to join exam logic*/
+  const joinExam = async () => {
+    try {
+      const res = await axios.get(
+        `http://localhost:5000/join-exam/${examCode}?email=${studentEmail}`,
+      );
+
+      setExamData(res.data.exam);
+      setTimeLeft(res.data.exam.timeLimit * 60);
+      setError("");
+    } catch (err) {
+      setError(err.response?.data?.error || "Unable to join exam");
+    }
+  };
+
+  /*timer for exzam*/
+  useEffect(() => {
+    if (!started) return;
+
+    if (timeLeft <= 0) {
+      return;
+    }
 
     const timer = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev === 1) {
-          submitExam(); // auto-submit
-          return 0;
-        }
-        return prev - 1;
-      });
+      setTimeLeft((prev) => prev - 1);
     }, 1000);
 
     return () => clearInterval(timer);
   }, [started, timeLeft]);
 
-  const handleAnswerChange = (questionId, value) => {
-    setAnswers((prev) => ({
-      ...prev,
-      [questionId]: value,
-    }));
-  };
-
-  const submitExam = async () => {
-  try {
-    const payload = {
-      examId: examData._id,
-      studentEmail: "student@gmail.com", // later from auth
-      answers,
-    };
-
-    const res = await axios.post(
-      "http://localhost:5000/submit-exam",
-      payload
-    );
-
-    alert(
-      `Exam Submitted!\nScore: ${res.data.score}/${res.data.totalMarks}`
-    );
-
-    setStarted(false);
-  } catch (err) {
-    alert("Failed to submit exam");
-  }
-};
-
-
-  const endExam = () => {
-    submitExam();
-  };
-
   const formatTime = () => {
-    const minutes = Math.floor(timeLeft / 60);
-    const seconds = timeLeft % 60;
-    return `${minutes}:${seconds.toString().padStart(2, "0")}`;
+    const min = Math.floor(timeLeft / 60);
+    const sec = timeLeft % 60;
+    return `${min}:${sec.toString().padStart(2, "0")}`;
+  };
+
+  /*code to submit exam*/
+  const submitExam = async () => {
+    if (!examData) return;
+    if (started === false) return;
+
+    try {
+      const res = await axios.post("http://localhost:5000/submit-exam", {
+        examId: examData._id,
+        studentEmail,
+        answers,
+      });
+
+      alert(
+        `Exam Submitted!\nScore: ${res.data.mcqScore}/${res.data.totalMarks}`,
+      );
+
+      setStarted(false);
+      setExamData(null);
+      setAnswers({});
+      fetchMyResults();
+    } catch (err) {
+      alert(err.response?.data?.error || "Submission failed");
+    }
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 p-6">
-      <div className="max-w-4xl mx-auto bg-white p-6 rounded shadow">
+    <div className="min-h-screen bg-gray-100">
+      <div className="bg-linear-to-r from-purple-600 to-fuchsia-600 py-6 text-center">
+        <h1 className="text-3xl font-bold text-white">
+          Welcome to Student’s Dashboard
+        </h1>
+      </div>
 
-        {!examData ? (
-          <>
-            <h1 className="text-2xl font-bold mb-4 text-center">
-              Student Dashboard
-            </h1>
-
-            <input
-              type="text"
-              placeholder="Enter 6-digit Exam Code"
-              value={examCode}
-              onChange={(e) => setExamCode(e.target.value)}
-              className="border p-2 w-full mb-3 text-center tracking-widest"
-              maxLength={6}
-            />
-
-            <button
-              onClick={joinExam}
-              className="bg-blue-600 text-white w-full py-2 rounded"
-            >
-              Join Exam
-            </button>
-
-            {error && (
-              <p className="text-red-600 text-center mt-3">{error}</p>
-            )}
-          </>
-        ) : !started ? (
-          <>
-            <h2 className="text-xl font-semibold mb-3">
-              {examData.title}
+      <div className="max-w-5xl mx-auto p-6">
+        {/*here is the code to join the exams*/}
+        {!examData && (
+          <div className="mb-12">
+            <h2 className="text-3xl font-bold text-purple-600 mb-6">
+              To join Exam
             </h2>
 
-            <p>Total Questions: {examData.questions.length}</p>
-            <p>Time Limit: {examData.timeLimit} minutes</p>
+            <div className="flex flex-col items-center">
+              <input
+                value={examCode}
+                onChange={(e) => setExamCode(e.target.value)}
+                placeholder="Enter the 6-digit code"
+                className="w-2/3 p-4 rounded-full bg-purple-200 text-center text-lg mb-6 outline-none"
+              />
+
+              <button
+                onClick={joinExam}
+                className="bg-linear-to-r from-purple-600 to-fuchsia-600 text-white px-8 py-3 rounded-full text-lg hover:opacity-90 transition"
+              >
+                Join Exam
+              </button>
+
+              {error && <p className="text-red-600 mt-4">{error}</p>}
+            </div>
+          </div>
+        )}
+
+        {/*details of exam before the start*/}
+        {examData && !started && (
+          <div className="bg-linear-to-r from-purple-600 to-fuchsia-600 text-white rounded-3xl p-10 text-center mb-10">
+            <h2 className="text-2xl mb-4">{examData.title}</h2>
+            <p className="text-lg">Time given - {examData.timeLimit} Minutes</p>
+            <p className="text-lg">
+              Total Questions - {examData.questions.length}
+            </p>
 
             <button
-              className="bg-green-600 text-white w-full py-2 rounded mt-4"
               onClick={() => setStarted(true)}
+              className="mt-8 bg-purple-300 text-white px-6 py-3 rounded-full text-lg hover:bg-purple-400 transition"
             >
               Start Exam
             </button>
-          </>
-        ) : (
+          </div>
+        )}
+
+        {/*exam question rendering code is here*/}
+        {started && (
           <>
-            {/* TIMER */}
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold">Exam in Progress</h2>
-              <span className="text-red-600 font-bold text-lg">
-                ⏱ {formatTime()}
-              </span>
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold text-purple-600">
+                {examData.title}
+              </h2>
+              <p className="text-xl font-semibold text-purple-600">
+                Time left :- {formatTime()} minutes
+              </p>
             </div>
 
-            {/* QUESTIONS */}
             {examData.questions.map((q, index) => (
-              <div key={q._id} className="border p-4 mb-4 rounded">
-                <p className="font-semibold mb-2">
+              <div key={q._id} className="mb-8">
+                <p className="text-xl font-semibold text-purple-600 mb-3">
                   {index + 1}. {q.questionText}
                 </p>
 
                 {q.type === "mcq" ? (
-                  q.options.map((opt, i) => (
-                    <label key={i} className="block">
-                      <input
-                        type="radio"
-                        name={q._id}
-                        value={i}
-                        onChange={() =>
-                          handleAnswerChange(q._id, i)
-                        }
-                      />{" "}
-                      {opt}
-                    </label>
-                  ))
+                  <ul className="space-y-3 ml-6">
+                    {q.options.map((opt, i) => (
+                      <li key={i}>
+                        <label className="flex items-center gap-3 text-lg text-purple-600">
+                          <input
+                            type="radio"
+                            name={q._id}
+                            onChange={() =>
+                              setAnswers((prev) => ({
+                                ...prev,
+                                [q._id]: i,
+                              }))
+                            }
+                          />
+                          {opt}
+                        </label>
+                      </li>
+                    ))}
+                  </ul>
                 ) : (
                   <textarea
-                    className="border w-full p-2"
-                    rows="3"
-                    placeholder="Write your answer..."
+                    className="w-full p-4 rounded-full bg-purple-200 mt-4 outline-none"
+                    placeholder="Write Here"
                     onChange={(e) =>
-                      handleAnswerChange(q._id, e.target.value)
+                      setAnswers((prev) => ({
+                        ...prev,
+                        [q._id]: e.target.value,
+                      }))
                     }
                   />
                 )}
               </div>
             ))}
 
-            {/* ACTION BUTTONS */}
-            <div className="flex gap-4 mt-4">
+            <div className="text-center">
               <button
-                className="bg-blue-600 text-white px-4 py-2 rounded"
                 onClick={submitExam}
+                className="bg-linear-to-r from-purple-600 to-fuchsia-600 text-white px-8 py-3 rounded-full text-lg"
               >
-                Submit Answers
-              </button>
-
-              <button
-                className="bg-red-600 text-white px-4 py-2 rounded"
-                onClick={endExam}
-              >
-                End Exam
+                Submit Exam
               </button>
             </div>
           </>
         )}
+
+        {/*here is the result of all given exms by student*/}
+        <div className="mt-16">
+          <h2 className="text-3xl font-bold text-purple-600 mb-6">
+            My Previous Exams
+          </h2>
+
+          {myResults.length === 0 ? (
+            <p className="text-gray-600">No exams attempted yet</p>
+          ) : (
+            <table className="w-full text-center border">
+              <thead className="bg-linear-to-r from-purple-600 to-fuchsia-600 text-white">
+                <tr>
+                  <th className="p-3">Exam Name</th>
+                  <th className="p-3">MCQ Score</th>
+                  <th className="p-3">Final Score</th>
+                  <th className="p-3">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {myResults.map((r) => (
+                  <tr key={r._id} className="bg-purple-200">
+                    <td className="p-3">{r.examId?.title}</td>
+                    <td className="p-3">
+                      {r.mcqScore}/{r.totalMarks}
+                    </td>
+                    <td className="p-3">{r.finalScore ?? r.mcqScore}</td>
+                    <td className="p-3">
+                      {r.longAnswerMarks !== undefined ? "Checked" : "Pending"}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
       </div>
     </div>
   );

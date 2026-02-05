@@ -3,22 +3,24 @@ import axios from "axios";
 import TeacherResults from "./TeacherResults";
 
 function TeacherDashboard() {
+  const teacherEmail = localStorage.getItem("email")?.trim().toLowerCase();
+
   const [questions, setQuestions] = useState([]);
   const [type, setType] = useState("mcq");
   const [questionText, setQuestionText] = useState("");
   const [options, setOptions] = useState(["", "", "", ""]);
   const [correctOption, setCorrectOption] = useState(null);
+
   const [examTitle, setExamTitle] = useState("");
   const [timeLimit, setTimeLimit] = useState("");
-  const [examPreview, setExamPreview] = useState(null);
 
-  // ✅ Task #1: previous exams
   const [previousExams, setPreviousExams] = useState([]);
   const [selectedExam, setSelectedExam] = useState(null);
 
-  const teacherEmail = localStorage.getItem("email");
+  useEffect(() => {
+    fetchPreviousExams();
+  }, []);
 
-  // ✅ fetch teacher previous exams
   const fetchPreviousExams = async () => {
     try {
       const res = await axios.get(
@@ -26,19 +28,15 @@ function TeacherDashboard() {
       );
       setPreviousExams(res.data.exams || []);
     } catch (err) {
-      console.error("Failed to load previous exams", err);
+      console.error("Failed to fetch exams");
     }
   };
-
-  useEffect(() => {
-    fetchPreviousExams();
-  }, []);
 
   const addQuestion = async () => {
     if (!questionText.trim()) return;
 
     if (type === "mcq" && correctOption === null) {
-      alert("Please select the correct option");
+      alert("Select correct option");
       return;
     }
 
@@ -51,160 +49,176 @@ function TeacherDashboard() {
             correctOption,
             createdBy: teacherEmail,
           }
-        : {
-            type,
-            questionText,
-            createdBy: teacherEmail,
-          };
+        : { type, questionText, createdBy: teacherEmail };
 
     try {
-      const res = await axios.post("http://localhost:5000/questions", payload);
+      const res = await axios.post(
+        "http://localhost:5000/questions",
+        payload
+      );
 
-      setQuestions([...questions, res.data]);
-
-      // reset form
+      setQuestions((prev) => [...prev, res.data]);
       setQuestionText("");
       setOptions(["", "", "", ""]);
       setCorrectOption(null);
-    } catch (err) {
+    } catch {
       alert("Failed to save question");
     }
   };
 
-  const deleteQuestion = (index) => {
-    setQuestions(questions.filter((_, i) => i !== index));
+  const removeQuestion = (questionId) => {
+    setQuestions((prev) =>
+      prev.filter((q) => q._id !== questionId)
+    );
   };
 
   const startExam = async () => {
-    try {
-      if (!examTitle || !timeLimit || questions.length === 0) {
-        alert("Please add exam title, time limit, and questions");
-        return;
-      }
+    if (!examTitle || !timeLimit || questions.length === 0) {
+      alert("Add title, time & questions");
+      return;
+    }
 
+    try {
       const payload = {
         title: examTitle,
-        questions: questions.map((q) => q._id), // IDs only
+        questions: questions.map((q) => q._id),
         timeLimit: Number(timeLimit),
         createdBy: teacherEmail,
       };
 
-      const res = await axios.post("http://localhost:5000/start-exam", payload);
-
-      const exam = res.data.exam || res.data;
-
-      setExamPreview({
-        title: exam.title,
-        timeLimit: exam.timeLimit,
-        totalQuestions: questions.length,
-        createdBy: exam.createdBy,
-        examCode: res.data.examCode || exam.examCode,
-        examId: exam._id,
-      });
+      await axios.post("http://localhost:5000/start-exam", payload);
 
       alert("Exam started successfully!");
-
-      // ✅ refresh previous exams list after starting a new exam
+      setExamTitle("");
+      setTimeLimit("");
+      setQuestions([]);
       fetchPreviousExams();
     } catch (err) {
-      alert("Failed to start exam");
+      alert(err.response?.data?.error || "Failed to start exam");
+    }
+  };
+
+  const endExam = async () => {
+    try {
+      await axios.post("http://localhost:5000/end-exam", {
+        examId: selectedExam._id,
+      });
+
+      alert("Exam ended");
+      setSelectedExam((prev) => ({ ...prev, status: "ended" }));
+      fetchPreviousExams();
+    } catch (err) {
+      alert(err.response?.data?.error || "Failed to end exam");
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 p-6">
-      {/* CREATE QUESTIONS */}
-      <div className="max-w-4xl mx-auto bg-white p-6 rounded shadow">
-        <h1 className="text-2xl font-bold mb-4">Teacher Dashboard</h1>
+    <div className="min-h-screen bg-gray-100">
+      <div className="bg-linear-to-r from-purple-700 to-pink-600 text-white py-6 text-center text-3xl font-bold">
+        Welcome to Teacher’s Dashboard
+      </div>
 
-        <select
-          className="border p-2 w-full mb-4"
-          value={type}
-          onChange={(e) => setType(e.target.value)}
-        >
-          <option value="mcq">MCQ</option>
-          <option value="long">Long Answer</option>
-        </select>
+      <div className="max-w-5xl mx-auto p-6">
 
-        <input
-          className="border p-2 w-full mb-4"
-          placeholder="Enter question"
-          value={questionText}
-          onChange={(e) => setQuestionText(e.target.value)}
-        />
+        {/*here is the code to make questions*/}
+        <h2 className="text-3xl font-bold text-purple-700 mb-6">
+          Make Question
+        </h2>
 
-        {type === "mcq" &&
-          options.map((opt, index) => (
-            <div key={index} className="flex items-center gap-2 mb-2">
-              <input
-                type="radio"
-                name="correctOption"
-                checked={correctOption === index}
-                onChange={() => setCorrectOption(index)}
-              />
-              <input
-                className="border p-2 w-full"
-                placeholder={`Option ${index + 1}`}
-                value={opt}
-                onChange={(e) => {
-                  const newOptions = [...options];
-                  newOptions[index] = e.target.value;
-                  setOptions(newOptions);
-                }}
-              />
-            </div>
-          ))}
+        <div className="bg-purple-200 p-6 rounded-lg shadow-md">
 
-        <button
-          onClick={addQuestion}
-          className="bg-blue-600 text-white px-4 py-2 rounded mt-3"
-        >
-          Save Question
-        </button>
+          <select
+            className="w-full p-3 mb-4 rounded bg-purple-300 text-white font-semibold"
+            value={type}
+            onChange={(e) => setType(e.target.value)}
+          >
+            <option value="mcq">MCQ</option>
+            <option value="long">Long Answer</option>
+          </select>
 
-        {/* Preview */}
-        <h2 className="text-xl font-semibold mt-6">Preview</h2>
+          <input
+            className="w-full p-3 mb-4 rounded bg-purple-300 text-white placeholder-white"
+            placeholder="Enter your question"
+            value={questionText}
+            onChange={(e) => setQuestionText(e.target.value)}
+          />
 
-        {questions.map((q, index) => (
-          <div key={index} className="border p-4 mt-2 rounded bg-gray-50">
-            <p className="font-semibold">
-              {index + 1}. {q.questionText}
-            </p>
+          {type === "mcq" &&
+            options.map((opt, i) => (
+              <div key={i} className="flex items-center gap-3 mb-2">
+                <input
+                  type="radio"
+                  checked={correctOption === i}
+                  onChange={() => setCorrectOption(i)}
+                />
+                <input
+                  className="w-full p-2 rounded bg-purple-300 text-white placeholder-white"
+                  placeholder={`Option ${i + 1}`}
+                  value={opt}
+                  onChange={(e) => {
+                    const arr = [...options];
+                    arr[i] = e.target.value;
+                    setOptions(arr);
+                  }}
+                />
+              </div>
+            ))}
 
-            {q.type === "mcq" && (
-              <ul className="ml-5 mt-2">
-                {q.options.map((opt, i) => (
-                  <li
-                    key={i}
+          <button
+            onClick={addQuestion}
+            className="mt-4 px-6 py-3 bg-linear-to-r from-purple-700 to-pink-600 text-white rounded-full font-semibold"
+          >
+            Save Question
+          </button>
+        </div>
+
+        {/*here is the preview of the saved questions*/}
+        <h3 className="text-2xl font-bold text-purple-700 mt-10 mb-4">
+          Saved Questions
+        </h3>
+
+        {questions.map((q, i) => (
+          <div
+            key={q._id}
+            className="bg-purple-100 p-4 rounded-lg mb-4 flex justify-between"
+          >
+            <div>
+              <p className="font-semibold text-purple-800">
+                {i + 1}. {q.questionText}
+              </p>
+
+              {q.type === "mcq" &&
+                q.options.map((opt, index) => (
+                  <p
+                    key={index}
                     className={
-                      q.correctOption === i
+                      index === q.correctOption
                         ? "text-green-600 font-semibold"
                         : ""
                     }
                   >
-                    {opt}
-                  </li>
+                    • {opt}
+                  </p>
                 ))}
-              </ul>
-            )}
+            </div>
 
             <button
-              onClick={() => deleteQuestion(index)}
-              className="text-red-600 mt-2"
+              onClick={() => removeQuestion(q._id)}
+              className="bg-red-500 text-white px-4 py-1 rounded-full h-fit"
             >
-              Delete
+              Remove
             </button>
           </div>
         ))}
-      </div>
 
-      {/* START EXAM */}
-      <div className="bg-gray-100 p-6">
-        <div className="max-w-4xl mx-auto bg-white p-6 rounded shadow">
-          <h1 className="text-2xl font-bold mb-4">Start Exam</h1>
+        {/*code to start exam*/}
+        <div className="mt-10 bg-purple-200 p-6 rounded-lg shadow-md">
+          <h3 className="text-2xl font-bold text-purple-800 mb-4">
+            Start Exam
+          </h3>
 
           <input
-            className="border p-2 w-full mb-3"
+            className="w-full p-3 mb-3 rounded bg-purple-300 text-white placeholder-white"
             placeholder="Exam Title"
             value={examTitle}
             onChange={(e) => setExamTitle(e.target.value)}
@@ -212,135 +226,63 @@ function TeacherDashboard() {
 
           <input
             type="number"
-            className="border p-2 w-full mb-3"
-            placeholder="Time limit (minutes)"
+            className="w-full p-3 mb-3 rounded bg-purple-300 text-white placeholder-white"
+            placeholder="Time (minutes)"
             value={timeLimit}
             onChange={(e) => setTimeLimit(e.target.value)}
           />
 
           <button
             onClick={startExam}
-            className="bg-green-600 text-white px-4 py-2 rounded"
+            className="px-6 py-3 bg-linear-to-r from-purple-700 to-pink-600 text-white rounded-full font-semibold"
           >
             Start Exam
           </button>
         </div>
-      </div>
 
-      {/* CURRENT EXAM PREVIEW */}
-      {examPreview && (
-        <div className="max-w-4xl mx-auto bg-white p-6 rounded shadow mt-6">
-          <h2 className="text-xl font-bold mb-3">Exam Started</h2>
+        {/*previous exam section is here*/}
+        <div className="mt-10">
+          <h3 className="text-2xl font-bold text-purple-700 mb-4">
+            Previous Exams
+          </h3>
 
-          <p>
-            <b>Exam Title:</b> {examPreview.title}
-          </p>
-          <p>
-            <b>Time Limit:</b> {examPreview.timeLimit} minutes
-          </p>
-          <p>
-            <b>Total Questions:</b> {examPreview.totalQuestions}
-          </p>
-          <p>
-            <b>Created By:</b> {examPreview.createdBy}
-          </p>
-
-          <p className="mt-4 text-lg font-bold text-blue-600">
-            Exam Code: {examPreview.examCode}
-          </p>
-
-          <p className="text-gray-600">
-            Share this code with students to start the exam
-          </p>
-
-          <div className="mt-6">
-            <TeacherResults examId={examPreview.examId} />
-          </div>
-        </div>
-      )}
-
-      {/* ✅ PREVIOUS EXAMS (Task #1) */}
-      <div className="max-w-4xl mx-auto bg-white p-6 rounded shadow mt-6">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold">Previous Exams</h2>
-          <button
-            onClick={fetchPreviousExams}
-            className="bg-blue-600 text-white px-4 py-2 rounded"
-          >
-            Refresh
-          </button>
+          {previousExams.map((exam) => (
+            <div
+              key={exam._id}
+              className="bg-purple-100 p-4 rounded-lg mb-3 cursor-pointer"
+              onClick={() => setSelectedExam(exam)}
+            >
+              <p className="font-semibold text-purple-800">
+                {exam.title}
+              </p>
+              <p>Code: {exam.examCode}</p>
+              <p>Status: {exam.status}</p>
+            </div>
+          ))}
         </div>
 
-        {previousExams.length === 0 ? (
-          <p className="text-gray-600">No exams created yet</p>
-        ) : (
-          <div className="space-y-3">
-            {previousExams.map((exam) => (
-              <div
-                key={exam._id}
-                className="border p-4 rounded bg-gray-50 cursor-pointer hover:bg-gray-100"
-                onClick={() => setSelectedExam(exam)}
-              >
-                <p className="font-semibold text-lg">{exam.title}</p>
-                <p className="text-sm text-gray-700">
-                  Exam Code: <b>{exam.examCode}</b>
-                </p>
-                <p className="text-sm text-gray-700">
-                  Time Limit: <b>{exam.timeLimit} min</b>
-                </p>
-                <p className="text-sm text-gray-700">
-                  Status:{" "}
-                  <b
-                    className={
-                      exam.status === "ended"
-                        ? "text-red-600"
-                        : "text-green-600"
-                    }
-                  >
-                    {exam.status}
-                  </b>
-                </p>
-                <p className="text-sm text-gray-700">
-                  Questions: <b>{exam.questions?.length || 0}</b>
-                </p>
-              </div>
-            ))}
+        {/*this part is to open details of the selected exams*/}
+        {selectedExam && (
+          <div className="mt-8 bg-purple-200 p-6 rounded-lg shadow-md">
+            <div className="flex justify-between items-center">
+              <h3 className="text-xl font-bold text-purple-800">
+                {selectedExam.title}
+              </h3>
+
+              {selectedExam.status === "started" && (
+                <button
+                  onClick={endExam}
+                  className="bg-red-600 text-white px-4 py-2 rounded-full"
+                >
+                  End Exam
+                </button>
+              )}
+            </div>
+
+            <TeacherResults examId={selectedExam._id} />
           </div>
         )}
       </div>
-
-      {/* ✅ Selected Exam Details + Results */}
-      {selectedExam && (
-        <div className="max-w-4xl mx-auto bg-white p-6 rounded shadow mt-6">
-          <div className="flex justify-between items-center mb-3">
-            <h2 className="text-xl font-bold">Selected Exam</h2>
-
-            <button
-              onClick={() => setSelectedExam(null)}
-              className="bg-gray-600 text-white px-3 py-1 rounded"
-            >
-              Close
-            </button>
-          </div>
-
-          <p>
-            <b>Title:</b> {selectedExam.title}
-          </p>
-          <p>
-            <b>Exam Code:</b> {selectedExam.examCode}
-          </p>
-          <p>
-            <b>Status:</b> {selectedExam.status}
-          </p>
-          <p>
-            <b>Time Limit:</b> {selectedExam.timeLimit} minutes
-          </p>
-
-          <div className="mt-6">
-            <TeacherResults examId={selectedExam._id} />
-          </div>
-        </div>
-      )}
     </div>
   );
 }

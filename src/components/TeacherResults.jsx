@@ -12,7 +12,7 @@ function TeacherResults({ examId }) {
     axios
       .get(`http://localhost:5000/results/${examId}`)
       .then((res) => setResults(res.data.results))
-      .catch((err) => console.error("Failed to fetch results", err));
+      .catch(() => console.error("Failed to fetch results"));
   };
 
   useEffect(() => {
@@ -24,159 +24,179 @@ function TeacherResults({ examId }) {
   const openSubmission = async (resultId) => {
     try {
       setSelectedResultId(resultId);
-      const res = await axios.get(`http://localhost:5000/result/${resultId}`);
+      const res = await axios.get(
+        `http://localhost:5000/result/${resultId}`
+      );
       setSubmission(res.data.result);
       setLongMarks(res.data.result?.longAnswerMarks ?? "");
-    } catch (err) {
-      alert("Failed to load submission details");
+    } catch {
+      alert("Failed to load submission");
     }
   };
 
   const gradeSubmission = async () => {
-  try {
-    if (!selectedResultId) return;
+    try {
+      if (!selectedResultId) return;
 
-    const res = await axios.post("http://localhost:5000/grade-result", {
-      resultId: selectedResultId,
-      longMarks: Number(longMarks || 0),
-    });
+      const res = await axios.post(
+        "http://localhost:5000/grade-result",
+        {
+          resultId: selectedResultId,
+          longMarks: Number(longMarks || 0),
+        }
+      );
 
-    alert("Marks saved!");
+      alert("Marks saved!");
 
-    // ✅ keep old populated examId/questions, only update score fields
-    setSubmission((prev) => ({
-      ...prev,
-      ...res.data.result,
-      examId: prev.examId,
-    }));
+      setSubmission((prev) => ({
+        ...prev,
+        ...res.data.result,
+        examId: prev.examId,
+      }));
 
-    fetchResults();
-  } catch (err) {
-    alert(err.response?.data?.error || "Failed to save marks");
-  }
-};
+      fetchResults();
+    } catch (err) {
+      alert(err.response?.data?.error || "Failed to save marks");
+    }
+  };
 
-
-  // ✅ SAFETY: never crash if submission not populated fully
   const questions = submission?.examId?.questions || [];
 
   return (
-    <div className="max-w-5xl mx-auto bg-white p-6 rounded shadow">
-      <div className="flex justify-between items-center">
-        <h2 className="text-xl font-bold mb-4">Exam Submissions</h2>
-        <button
-          onClick={fetchResults}
-          className="bg-blue-500 text-white px-3 py-1 rounded"
-        >
-          Refresh
-        </button>
+    <div className="mt-8">
+
+      {/* this is the table section */}
+      <div className="bg-white rounded-2xl shadow-xl p-6">
+
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-bold text-purple-700">
+            Exam Submissions
+          </h2>
+
+          <button
+            onClick={fetchResults}
+            className="bg-linear-to-r from-purple-600 to-pink-600 text-white px-4 py-2 rounded-lg"
+          >
+            Refresh
+          </button>
+        </div>
+
+        {results.length === 0 ? (
+          <p className="text-gray-500">No submissions yet</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-center border-collapse">
+              <thead>
+                <tr className="bg-linear-to-r from-purple-600 to-pink-600 text-white">
+                  <th className="p-3">Student</th>
+                  <th className="p-3">MCQ Score</th>
+                  <th className="p-3">Final Score</th>
+                  <th className="p-3">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {results.map((r) => (
+                  <tr
+                    key={r._id}
+                    className="border-b hover:bg-purple-50"
+                  >
+                    <td className="p-3">{r.studentEmail}</td>
+
+                    <td className="p-3">
+                      {r.mcqScore ?? r.score}/{r.totalMarks}
+                    </td>
+
+                    <td className="p-3">
+                      {r.finalScore ?? r.score}
+                    </td>
+
+                    <td className="p-3">
+                      <button
+                        onClick={() => openSubmission(r._id)}
+                        className="bg-green-600 text-white px-3 py-1 rounded-lg hover:bg-green-700"
+                      >
+                        View Submission
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
-      {/* TABLE */}
-      {results.length === 0 ? (
-        <p>No submissions yet</p>
-      ) : (
-        <table className="w-full border mb-6">
-          <thead>
-            <tr className="bg-gray-200">
-              <th className="border p-2">Student</th>
-              <th className="border p-2">MCQ Score</th>
-              <th className="border p-2">Final Score</th>
-              <th className="border p-2">Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {results.map((r) => (
-              <tr key={r._id} className="hover:bg-gray-50">
-                <td className="border p-2">{r.studentEmail}</td>
-
-                <td className="border p-2 text-center">
-                  {r.mcqScore ?? r.score}/{r.totalMarks}
-                </td>
-
-                <td className="border p-2 text-center">
-                  {r.finalScore ?? r.score}
-                </td>
-
-                <td className="border p-2 text-center">
-                  <button
-                    onClick={() => openSubmission(r._id)}
-                    className="bg-green-600 text-white px-3 py-1 rounded"
-                  >
-                    View Submission
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
-
-      {/* SUBMISSION DETAILS */}
+      {/* here is the submission details section*/}
       {submission && (
-        <div className="border rounded p-4 bg-gray-50">
-          <h3 className="text-lg font-bold mb-2">
+        <div className="mt-8 bg-linear-to-r from-purple-600 to-pink-600 rounded-2xl shadow-2xl p-8 text-white">
+
+          <h3 className="text-xl font-bold mb-6">
             Submission: {submission.studentEmail}
           </h3>
 
-          {/* ✅ if questions not loaded, show message instead of crashing */}
-          {questions.length === 0 ? (
-            <p className="text-red-600">
-              Submission loaded, but questions are not available (populate issue).
-            </p>
-          ) : (
-            questions.map((q, index) => {
+          {/*questions*/}
+          <div className="space-y-6">
+
+            {questions.map((q, index) => {
               const studentAns = submission.answers?.[q._id];
 
               return (
-                <div key={q._id} className="border p-3 rounded bg-white mb-3">
-                  <p className="font-semibold">
+                <div
+                  key={q._id}
+                  className="bg-white text-black rounded-xl p-5 shadow-md"
+                >
+                  <p className="font-semibold text-purple-700 mb-3">
                     {index + 1}. {q.questionText}
                   </p>
 
                   {q.type === "mcq" ? (
-                    <div className="mt-2">
+                    <>
                       <p>
-                        <b>Student Answer:</b>{" "}
+                        <span className="font-semibold">
+                          Student Answer:
+                        </span>{" "}
                         {studentAns !== undefined
                           ? q.options?.[studentAns]
                           : "Not Answered"}
                       </p>
 
-                      <p className="text-green-600">
-                        <b>Correct Answer:</b> {q.options?.[q.correctOption]}
+                      <p className="text-green-600 font-semibold">
+                        Correct Answer:{" "}
+                        {q.options?.[q.correctOption]}
                       </p>
-                    </div>
+                    </>
                   ) : (
-                    <div className="mt-2">
-                      <p className="text-gray-700">
-                        <b>Student Answer:</b> {studentAns || "Not Answered"}
-                      </p>
-                    </div>
+                    <p>
+                      <span className="font-semibold">
+                        Student Answer:
+                      </span>{" "}
+                      {studentAns || "Not Answered"}
+                    </p>
                   )}
                 </div>
               );
-            })
-          )}
+            })}
+          </div>
 
-          {/* MANUAL MARKING */}
-          <div className="mt-4">
-            <label className="block font-semibold mb-1">
-              Marks for Long Answers (Teacher Manual)
+          {/*this part is for mannual marking*/}
+          <div className="mt-8 bg-white text-black rounded-xl p-6 shadow-md">
+
+            <label className="block font-semibold mb-2 text-purple-700">
+              Marks for Long Answers (Manual)
             </label>
 
             <input
               type="number"
-              className="border p-2 w-full mb-3"
+              className="border-2 border-purple-300 rounded-lg p-2 w-full mb-4 focus:outline-none focus:border-purple-600"
               value={longMarks}
               onChange={(e) => setLongMarks(e.target.value)}
-              placeholder="Enter marks (e.g. 5)"
+              placeholder="Enter marks"
             />
 
-            <div className="flex gap-3">
+            <div className="flex gap-4">
               <button
                 onClick={gradeSubmission}
-                className="bg-purple-600 text-white px-4 py-2 rounded"
+                className="bg-linear-to-r from-purple-600 to-pink-600 text-white px-5 py-2 rounded-lg"
               >
                 Save Marks
               </button>
@@ -187,12 +207,13 @@ function TeacherResults({ examId }) {
                   setSelectedResultId(null);
                   setLongMarks("");
                 }}
-                className="bg-gray-600 text-white px-4 py-2 rounded"
+                className="bg-gray-600 text-white px-5 py-2 rounded-lg"
               >
                 Close
               </button>
             </div>
           </div>
+
         </div>
       )}
     </div>
