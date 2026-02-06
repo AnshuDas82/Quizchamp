@@ -1,4 +1,4 @@
-🎓 QuizChamp – Online Exam Management System
+# QuizChamp – Online Exam Management System
 
 QuizChamp is a full-stack web application that allows teachers to create, manage, and evaluate online exams, while students can securely join exams using a unique code and view their results.
 
