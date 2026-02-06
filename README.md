@@ -12,80 +12,81 @@ Built with:
 
 🎨 Tailwind CSS (UI Design)
 
-✨ Features
+# Features
 👩‍🏫 Teacher Features
 
-Create MCQ and Long Answer questions
+- Create MCQ and Long Answer questions
 
-Start exams with:
+- Start exams with:
 
-Custom title
+- Custom title
 
-Time limit
+- Time limit
 
-Auto-generated 6-digit exam code
+- Auto-generated 6-digit exam code
 
-View all previously created exams
+- View all previously created exams
 
-End exam manually
+- End exam manually
 
-View student submissions
+- View student submissions
 
-Auto-evaluation for MCQs
+- Auto-evaluation for MCQs
 
-Manual grading for long answers
+- Manual grading for long answers
 
-Real-time result updates
+- Real-time result updates
 
 👨‍🎓 Student Features
 
-Join exam using 6-digit code
+- Join exam using 6-digit code
 
-Timer-based exam session
+- Timer-based exam session
 
-Auto-submit when time runs out ⏱
+- Auto-submit when time runs out ⏱
 
-Prevent multiple attempts
+- Prevent multiple attempts
 
-View previous exam attempts
+- View previous exam attempts
 
-See MCQ score and final graded score
+- See MCQ score and final graded score
 
-🔐 Security Features
+# Security Features
 
-Email-based login system
+- Email-based login system
 
-Role-based authentication (Student / Teacher)
+- Role-based authentication (Student / Teacher)
 
-Prevent multiple submissions
+- Prevent multiple submissions
 
-Block re-attempt after submission
+- Block re-attempt after submission
 
-Prevent submission after exam ends
+- Prevent submission after exam ends
 
-Server-side validation for all exam actions
+- Server-side validation for all exam actions
 
-🧠 How It Works
+# 🧠 How It Works
 
-Teacher creates questions.
+1. Teacher creates questions.
 
-Teacher starts an exam.
+2. Teacher starts an exam.
 
-System generates a unique 6-digit exam code.
+3. System generates a unique 6-digit exam code.
 
-Students join using that code.
+4. Students join using that code.
 
-Timer starts when student begins exam.
+5. Timer starts when student begins exam.
 
-Exam auto-submits when timer ends.
+6. Exam auto-submits when timer ends.
 
-MCQs auto-graded.
+7. MCQs auto-graded.
 
-Teacher manually grades long answers.
+8. Teacher manually grades long answers.
 
-Final score is calculated and displayed.
+9. Final score is calculated and displayed.
 
-📁 Project Structure
+# 📁 Project Structure
+```
 QuizChamp/
 │
 ├── frontend/
@@ -104,8 +105,9 @@ QuizChamp/
 │ └── question.js
 │
 └── README.md
+```
 
-⚙️ Installation & Setup
+# ⚙️ Installation & Setup
 1️⃣ Clone the repository
 git clone https://github.com/your-username/quizchamp.git
 cd quizchamp
@@ -143,19 +145,19 @@ exams
 
 results
 
-🏆 Exam Flow Logic
-MCQ Scoring
+# 🏆 Exam Flow Logic
+- MCQ Scoring
 
-Each MCQ = 1 mark
-Automatically graded on submission.
+- Each MCQ = 1 mark
+- Automatically graded on submission.
 
-Long Answer Scoring
+- Long Answer Scoring
 
-Teacher manually assigns marks.
+- Teacher manually assigns marks.
 
-Final Score = MCQ Score + Long Answer Marks
+- Final Score = MCQ Score + Long Answer Marks
 
-📌 Important API Endpoints
+# 📌 Important API Endpoints
 Method Endpoint Description
 POST /signup Register user
 POST /login Login user
@@ -168,24 +170,10 @@ POST /grade-result Grade long answers
 POST /end-exam End exam
 GET /teacher-exams/:email Teacher previous exams
 GET /student-results/:email Student previous attempts
-🚀 Future Improvements
 
-JWT Authentication
-
-Password encryption with salting
-
-WebSocket for real-time updates
-
-Pagination for results
-
-Leaderboard system
-
-Exam analytics dashboard
-
-Export results to CSV
-
-👨‍💻 Developed By
-
-Anshu Das
+# 👨‍💻 Developed By
+```
+Anshu Kumar Das
 Computer Science & Engineering Student
 Full Stack Developer
+```
