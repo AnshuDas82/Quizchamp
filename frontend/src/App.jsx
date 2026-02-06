@@ -1,7 +1,7 @@
 import AuthPage from "./components/Authpage.jsx"
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import StudentDashboard from "./components/Studentdashboard.jsx";
-import TeacherDashboard from "./components/Teacherdashboard.jsx";
+import StudentDashboard from "./components/StudentDashboard.jsx";
+import TeacherDashboard from "./components/TeacherDashboard.jsx";
 function App() {
 
   return (
