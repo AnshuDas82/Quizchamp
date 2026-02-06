@@ -1,16 +1,191 @@
-# React + Vite
+🎓 QuizChamp – Online Exam Management System
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+QuizChamp is a full-stack web application that allows teachers to create, manage, and evaluate online exams, while students can securely join exams using a unique code and view their results.
 
-Currently, two official plugins are available:
+Built with:
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+⚛️ React.js (Frontend)
 
-## React Compiler
+🚀 Node.js + Express.js (Backend)
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+🍃 MongoDB + Mongoose (Database)
 
-## Expanding the ESLint configuration
+🎨 Tailwind CSS (UI Design)
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+✨ Features
+👩‍🏫 Teacher Features
+
+Create MCQ and Long Answer questions
+
+Start exams with:
+
+Custom title
+
+Time limit
+
+Auto-generated 6-digit exam code
+
+View all previously created exams
+
+End exam manually
+
+View student submissions
+
+Auto-evaluation for MCQs
+
+Manual grading for long answers
+
+Real-time result updates
+
+👨‍🎓 Student Features
+
+Join exam using 6-digit code
+
+Timer-based exam session
+
+Auto-submit when time runs out ⏱
+
+Prevent multiple attempts
+
+View previous exam attempts
+
+See MCQ score and final graded score
+
+🔐 Security Features
+
+Email-based login system
+
+Role-based authentication (Student / Teacher)
+
+Prevent multiple submissions
+
+Block re-attempt after submission
+
+Prevent submission after exam ends
+
+Server-side validation for all exam actions
+
+🧠 How It Works
+
+Teacher creates questions.
+
+Teacher starts an exam.
+
+System generates a unique 6-digit exam code.
+
+Students join using that code.
+
+Timer starts when student begins exam.
+
+Exam auto-submits when timer ends.
+
+MCQs auto-graded.
+
+Teacher manually grades long answers.
+
+Final score is calculated and displayed.
+
+📁 Project Structure
+QuizChamp/
+│
+├── frontend/
+│ ├── AuthPage.jsx
+│ ├── TeacherDashboard.jsx
+│ ├── TeacherResults.jsx
+│ ├── StudentDashboard.jsx
+│ └── ...
+│
+├── backend/
+│ ├── server.js
+│ ├── models/
+│ │ ├── Exam.js
+│ │ ├── Result.js
+│ │ └── ...
+│ └── question.js
+│
+└── README.md
+
+⚙️ Installation & Setup
+1️⃣ Clone the repository
+git clone https://github.com/your-username/quizchamp.git
+cd quizchamp
+
+2️⃣ Backend Setup
+cd backend
+npm install
+
+Start MongoDB locally.
+
+Then run:
+
+node server.js
+
+Server runs on:
+
+http://localhost:5000
+
+3️⃣ Frontend Setup
+cd frontend
+npm install
+npm start
+
+Frontend runs on:
+
+http://localhost:3000
+
+🗄 Database Collections
+
+users
+
+questions
+
+exams
+
+results
+
+🏆 Exam Flow Logic
+MCQ Scoring
+
+Each MCQ = 1 mark
+Automatically graded on submission.
+
+Long Answer Scoring
+
+Teacher manually assigns marks.
+
+Final Score = MCQ Score + Long Answer Marks
+
+📌 Important API Endpoints
+Method Endpoint Description
+POST /signup Register user
+POST /login Login user
+POST /questions Create question
+POST /start-exam Start new exam
+GET /join-exam/:code Join exam
+POST /submit-exam Submit exam
+GET /results/:examId Get exam results
+POST /grade-result Grade long answers
+POST /end-exam End exam
+GET /teacher-exams/:email Teacher previous exams
+GET /student-results/:email Student previous attempts
+🚀 Future Improvements
+
+JWT Authentication
+
+Password encryption with salting
+
+WebSocket for real-time updates
+
+Pagination for results
+
+Leaderboard system
+
+Exam analytics dashboard
+
+Export results to CSV
+
+👨‍💻 Developed By
+
+Anshu Das
+Computer Science & Engineering Student
+Full Stack Developer
